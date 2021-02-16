@@ -261,7 +261,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * | Shift|   Z  |   X  |   C  |   V  |   B  |   K  |   M  |   ,  |   .  |   /  | Shift|
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Ctrl | GUI  | Alt  | LOWER|MIDDLE|    Space    |RAISE |      |      |XSNEK |QWERTY|
+ * | Ctrl | GUI  | Alt  |MIDDLE|LOWER |    Space    |RAISE |MIDDLE| LALT |XSNEK |QWERTY|
  * `-----------------------------------------------------------------------------------'
  */
 
@@ -269,7 +269,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,    KC_Q,     KC_W,     KC_F,   KC_P,    KC_G,    KC_J,   KC_L,     KC_U,     KC_Y,     KC_SCOLON,  _______,
     KC_BSPACE, KC_A,     KC_R,     KC_S,   KC_T,    KC_D,    KC_H,   KC_N,     KC_E,     KC_I,     KC_O,       KC_QUOTE,
     KC_LSFT,   KC_Z,     KC_X,     KC_C,   KC_V,    KC_B,    KC_K,   KC_M,     KC_COMM,  KC_DOT,   KC_SLSH,    KC_RSFT,
-    KC_LCTL,   KC_LGUI,  KC_LALT,  MIDDLE, LOWER,      KC_SPC    ,  RAISE,  _______,  _______,  X(SNEK),  TO(_QWERTY)
+    KC_LCTL,   KC_LGUI,  KC_LALT,  MIDDLE, LOWER,      KC_SPC    ,   RAISE,    MIDDLE,   KC_LALT,  X(SNEK),  TO(_QWERTY)
 ),
 
 /* _QWERTY
@@ -280,15 +280,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  |Enter |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | BLTog| Ctrl | Alt  | GUI  |Lower |    Space    |Raise |      |      |XIRONY|COLEMA|
+ * | Ctrl | GUI  | Alt  | MIDDLE|LOWER|    Space    |Raise |MIDDLE| LALT |XIRONY|COLEMA|
  * `-----------------------------------------------------------------------------------'
  */
 
 [_QWERTY] = LAYOUT_planck_mit(
-    KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,      ,
+    KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,      _______,
     KC_BSPC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,   KC_QUOT,
     KC_LSFT,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,   KC_RSFT ,
-    KC_LCTL,  KC_LGUI, KC_LALT, MIDDLE,  LOWER,      KC_SPC    ,    RAISE,   _______, _______, X(IRONY),  TO(_COLEMAK)
+    KC_LCTL,  KC_LGUI, KC_LALT, MIDDLE,  LOWER,      KC_SPC    ,    RAISE,   MIDDLE,  KC_LALT, X(IRONY),  TO(_COLEMAK)
 ),
 
 /* _LOWER
@@ -458,6 +458,7 @@ void matrix_scan_user(void) {
       break;
     case _MIDDLE:
       rgb_matrix_set_color(39,100, 50, 50);
+      rgb_matrix_set_color(43,100, 50, 50);
       break;
     case _RAISE:
       rgb_matrix_set_color(42,100, 50, 50);
