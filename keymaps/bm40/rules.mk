@@ -26,3 +26,4 @@ LAYOUTS = planck_mit
 LAYOUTS_HAS_RGB = yes
 # UNICODE_ENABLE = yes
 UNICODEMAP_ENABLE = yes
+RAW_ENABLE = yes # enables hid

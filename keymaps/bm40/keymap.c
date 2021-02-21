@@ -1,11 +1,57 @@
 #include QMK_KEYBOARD_H
 
+#include "raw_hid.h"
+
 #define LOWER MO(_LOWER)
 #define RAISE MO(_RAISE)
 #define MIDDLE MO(_MIDDLE)
 #define EXTRA MO(_EXTRA)
 
 // snek code begin
+
+typedef struct {
+  int red;
+  int blue;
+  int green;
+} color;
+
+color leds[47];
+int ledsGlow[47];
+int ledsInit = 0;
+
+void showRGB(void) {
+  for(int i = 0; i<47; i++){
+    rgb_matrix_set_color(i,leds[i].red, leds[i].blue, leds[i].green);
+    if(ledsGlow[i] == 1) {
+      rgb_matrix_set_color(i,100,50,50);
+    }
+  }
+}
+
+void setBlackRGB(void) {
+  for(int i = 0; i<47; i++){
+    leds[i].red = 0;
+    leds[i].blue = 0;
+    leds[i].green = 0;
+  }
+}
+
+void setRGB(int index, int red, int blue, int green) {
+  leds[index].red = red;
+  leds[index].blue = blue;
+  leds[index].green = green;
+
+  
+}
+
+void initLed(void) {
+  int i;
+  for(i = 0; i<47; i++){
+    leds[i].red = 0;
+    leds[i].blue = 0;
+    leds[i].green = 0;
+  }
+}
 
 enum direction {
   left,
@@ -278,7 +324,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* _QWERTY
  * ,-----------------------------------------------------------------------------------.
- * | Tab  |   Q  |   W  |   E  |   R  |   T  |   Y  |   U  |   I  |   O  |   P  |BSpace|
+ * | Tab  |   Q  |   W  |   E  |   R  |   T  |   Y  |   U  |   I  |   O  |   P  |      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |BSpace|   A  |   S  |   D  |   F  |   G  |   H  |   J  |   K  |   L  |   ;  |  "   |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
@@ -502,52 +548,76 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
 void matrix_scan_user(void) {
   uint8_t layer = biton32(layer_state);
 
-  rgb_matrix_set_color_all(0, 0, 0);
+  if(ledsInit == 0) {
+    initLed();
+    ledsInit = 1;
+  }
 
   if(layer != _SNEK) {
     resetSnek();
   }
 
+  ledsGlow[46] = 0;
+  ledsGlow[40] = 0;
+  ledsGlow[39] = 0;
+  ledsGlow[42] = 0; 
+  ledsGlow[43] = 0;
+
+  leds[0].red=255;
+  leds[0].blue=0;
+  leds[0].green=0;
+
   switch(layer) {
     case _COLEMAK:
-      qwerty = 0;
-      rgb_matrix_set_color(0,0, 0, 0);
+      //qwerty = 0;
+      //setBlackRGB();
       break;
     case _QWERTY:
-      qwerty = 1;
+      //qwerty = 1;
+      //setBlackRGB();
+      //setRGB(46,100,50,50);
+      ledsGlow[46] = 1;
       break;
     case _LOWER:
-      rgb_matrix_set_color(40,100, 50, 50);
+      //setRGB(40,100,50,50);
+      ledsGlow[40] = 1;
       break;
     case _MIDDLE:
-      rgb_matrix_set_color(39,100, 50, 50);
+      //setRGB(39,100,50,50);
+      ledsGlow[39] = 1;
       break;
     case _RAISE:
-      rgb_matrix_set_color(42,100, 50, 50);
+      //setRGB(42,100,50,50);
+      ledsGlow[42] = 1;
       break;
     case _EXTRA:
-      rgb_matrix_set_color(43,100, 50, 50);
+      //setRGB(43,100,50,50);
+      ledsGlow[43] = 1;
       break;
     case _ADJUST:
-      rgb_matrix_set_color(40,100, 50, 50);
-      rgb_matrix_set_color(42,100, 50, 50);
+      //setRGB(40,100,50,50);
+      //setRGB(42,100,50,50);
+      ledsGlow[40] = 1;
+      ledsGlow[42] = 1;
       break;
     case _LEFT:
-      rgb_matrix_set_color(39,100, 50, 50);
-      rgb_matrix_set_color(40,100, 50, 50);
+      //setRGB(39,100,50,50);
+      //setRGB(40,100,50,50);
+      ledsGlow[39] = 1;
+      ledsGlow[40] = 1;
       break;
     case _RIGHT:
-      rgb_matrix_set_color(43,100, 50, 50);
-      rgb_matrix_set_color(42,100, 50, 50);
+      //setRGB(43,100,50,50);
+      //setRGB(42,100,50,50);
+      ledsGlow[43] = 1;
+      ledsGlow[42] = 1;
       break;
     case _SNEK:
       snek();
       break;
   }
 
-  if(qwerty) {
-      rgb_matrix_set_color(46,100, 50, 50);
-  }
+  showRGB();
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
@@ -555,4 +625,31 @@ layer_state_t layer_state_set_user(layer_state_t state) {
   state = update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
   state = update_tri_layer_state(state, _RAISE, _EXTRA, _RIGHT);
   return state;
+}
+
+// Data:
+/*
+ * [0] int one = 1 - wheter only one index or all at same
+ * [1] r - red
+ * [2] g - green
+ * [3] b - blue
+ * [4] i - index
+ *
+ * [0] int one = 0 - wheter only one index or all at same
+ * [1] r - red
+ * [2] g - green
+ * [3] b - blue
+ * [4] r - red
+ * ...
+ */
+
+void raw_hid_receive(uint8_t *data, uint8_t length) {
+  if(data[0]==1) {
+    for(int i = 0; i<47; i++) {
+      setRGB(i, data[1], data[2], data[3]);
+    }
+  } else {
+    setRGB(data[4], data[1], data[2], data[3]);
+  }
+  raw_hid_send(data,length);
 }
