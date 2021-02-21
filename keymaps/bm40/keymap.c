@@ -36,12 +36,18 @@ void setBlackRGB(void) {
   }
 }
 
+void setAllRGB(int red, int green, int blue) {
+  for(int i = 0; i<47; i++){
+    leds[i].red = red;
+    leds[i].blue = green;
+    leds[i].green = blue;
+  }
+}
+
 void setRGB(int index, int red, int blue, int green) {
   leds[index].red = red;
   leds[index].blue = blue;
   leds[index].green = green;
-
-  
 }
 
 void initLed(void) {
@@ -92,8 +98,9 @@ void countClock(void) {
 
 void updateSnek(void) {
   for(int i = snekLength; i > 0; i--) {
-    rgb_matrix_set_color(talePos[i],255, 255, 255);
+    setRGB(talePos[i],255,255,255);
   }
+  setRGB(talePos[0],255,0,0);
 }
 
 void updateTale(void) {
@@ -107,7 +114,7 @@ void updateTale(void) {
 }
 
 void updateFood(void) {
-  rgb_matrix_set_color(foodPos,255, 0, 0);
+  setRGB(foodPos,0,255,0);
 }
 
 int getRow(int a, int b) {
@@ -133,6 +140,7 @@ void resetSnek(void) {
   }
   isDead = 0;
   timeWhenLoose = 0;
+  setBlackRGB();
 }
 
 void moveSnek(void) {
@@ -214,13 +222,13 @@ int spawnFood(void) {
 
 void die(void) {
   if(timeWhenLoose+1 < clock) {
-    rgb_matrix_set_color_all(0, 0, 0);
+    setAllRGB(0,0,0);
     if(timeWhenLoose+2 < clock) {
-      rgb_matrix_set_color_all(255, 0, 0);
+      setAllRGB(255,0,0);
       if(timeWhenLoose+3 < clock) {
-        rgb_matrix_set_color_all(0, 0, 0);
+        setAllRGB(0,0,0);
         if(timeWhenLoose+4 < clock) {
-          rgb_matrix_set_color_all(255, 0, 0);
+          setAllRGB(255,0,0);
           if(timeWhenLoose+5 < clock) {
             resetSnek();
           }
@@ -250,6 +258,7 @@ void initFood(void) {
 }
 
 void snek(void) {
+  setBlackRGB();
   countClock();
   if(isDead==1) {
     die();
@@ -563,52 +572,33 @@ void matrix_scan_user(void) {
   ledsGlow[42] = 0; 
   ledsGlow[43] = 0;
 
-  leds[0].red=255;
-  leds[0].blue=0;
-  leds[0].green=0;
-
   switch(layer) {
     case _COLEMAK:
-      //qwerty = 0;
-      //setBlackRGB();
       break;
     case _QWERTY:
-      //qwerty = 1;
-      //setBlackRGB();
-      //setRGB(46,100,50,50);
       ledsGlow[46] = 1;
       break;
     case _LOWER:
-      //setRGB(40,100,50,50);
       ledsGlow[40] = 1;
       break;
     case _MIDDLE:
-      //setRGB(39,100,50,50);
       ledsGlow[39] = 1;
       break;
     case _RAISE:
-      //setRGB(42,100,50,50);
       ledsGlow[42] = 1;
       break;
     case _EXTRA:
-      //setRGB(43,100,50,50);
       ledsGlow[43] = 1;
       break;
     case _ADJUST:
-      //setRGB(40,100,50,50);
-      //setRGB(42,100,50,50);
       ledsGlow[40] = 1;
       ledsGlow[42] = 1;
       break;
     case _LEFT:
-      //setRGB(39,100,50,50);
-      //setRGB(40,100,50,50);
       ledsGlow[39] = 1;
       ledsGlow[40] = 1;
       break;
     case _RIGHT:
-      //setRGB(43,100,50,50);
-      //setRGB(42,100,50,50);
       ledsGlow[43] = 1;
       ledsGlow[42] = 1;
       break;
