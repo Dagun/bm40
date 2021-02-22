@@ -7,7 +7,10 @@
 #define MIDDLE MO(_MIDDLE)
 #define EXTRA MO(_EXTRA)
 
-// snek code begin
+
+////////////////////
+// LED CONTROLLER //
+////////////////////
 
 typedef struct {
   int red;
@@ -56,35 +59,42 @@ void initLed(void) {
     leds[i].red = 0;
     leds[i].blue = 0;
     leds[i].green = 0;
+    ledsGlow[i] = 0;
   }
 }
+
+////////////////////
+// Global values ///
+////////////////////
+
 
 enum direction {
   left,
   down,
   up,
-  right
+  right,
+  none
 };
 
-int qwerty = 0;
-
-int snekLives = 3;
 int clock = 0;
 int lastClock = 0;
 int currentDir = left;
+int lastDir = left;
 int currentPos = 20;
 int initRand = 0;
-int foodPos = 12;
-int snekLength = 1;
-int talePos[46] = {-1};
-int isDead = 0;
-int timeWhenLoose = 0;
-int enableCon = 0;
 static uint16_t key_timer;
+int resetGame = 0;
+
+double pressedKeys = 0;
+
+
+///////////////////////
+// Global functions ///
+///////////////////////
 
 void initRandom(void) {
   if(initRand==0) {
-    srand(timer_elapsed(key_timer));
+    srand(timer_elapsed(key_timer)*(1+pressedKeys));
     initRand = 1;
   }
 }
@@ -96,25 +106,29 @@ void countClock(void) {
   }
 }
 
-void updateSnek(void) {
-  for(int i = snekLength; i > 0; i--) {
-    setRGB(talePos[i],255,255,255);
+int getRandom(int a, int b) {
+  int seed = rand()*(1+pressedKeys);
+  int random = (seed%(b - a + 1))+a;
+  if(random < 0) {
+    random = random * -1;
   }
-  setRGB(talePos[0],255,0,0);
+  return random;
 }
 
-void updateTale(void) {
-  if(talePos[snekLength-1]==-1) {
-    talePos[snekLength-1] = talePos[snekLength-2];
-  }
-  for(int i = snekLength; i > 0; i--) {
-    talePos[i] = talePos[i-1];
-  }
-  talePos[0] = currentPos;
+void send_return(void) {
+  send_string("\n");
 }
 
-void updateFood(void) {
-  setRGB(foodPos,0,255,0);
+void send_int(int value) {
+  char val[25];
+  sprintf(val,"%d",value);
+  send_string(val);
+}
+
+void send_float(float value) {
+  char val[25];
+  sprintf(val,"%f",value);
+  send_string(val);
 }
 
 int getRow(int a, int b) {
@@ -126,25 +140,11 @@ int smallestRow(int a) {
   return a-(c*12);
 }
 
-void resetSnek(void) {
-  snekLives = 3;
-  clock = 0;
-  lastClock = 0;
-  currentDir = left;
-  currentPos = 20;
-  initRand = 0;
-  foodPos = -1;
-  snekLength = 1;
-  for(int i = 0; i < 46; i++) {
-    talePos[i] = -1;
+void moveObject(void) {
+   if(currentDir != none) {
+    lastDir = currentDir;
   }
-  isDead = 0;
-  timeWhenLoose = 0;
-  setBlackRGB();
-}
-
-void moveSnek(void) {
-  switch(currentDir) {
+  switch(lastDir) {
     case left:
       if(smallestRow(currentPos) - 1 != -1) {
         currentPos = currentPos - 1;
@@ -208,16 +208,72 @@ void moveSnek(void) {
       
       break;
   }
+}
+
+
+////////////////////////////////
+// Declaration of values SNEK //
+////////////////////////////////
+
+int snekLives = 3;
+int foodPos = 12;
+int snekLength = 1;
+int talePos[46] = {-1};
+int isDead = 0;
+int timeWhenLoose = 0;
+int enableCon = 0;
+
+
+
+////////////////
+// SNEK CODE ///
+////////////////
+
+void updateSnek(void) {
+  for(int i = snekLength; i > 0; i--) {
+    setRGB(talePos[i],255,255,255);
+  }
+  setRGB(talePos[0],255,0,0);
+}
+
+void updateTale(void) {
+  if(talePos[snekLength-1]==-1) {
+    talePos[snekLength-1] = talePos[snekLength-2];
+  }
+  for(int i = snekLength; i > 0; i--) {
+    talePos[i] = talePos[i-1];
+  }
+  talePos[0] = currentPos;
+}
+
+void updateFood(void) {
+  setRGB(foodPos,0,255,0);
+}
+
+void resetSnek(void) {
+  snekLives = 3;
+  clock = 0;
+  lastClock = 0;
+  currentDir = left;
+  currentPos = 20;
+  initRand = 0;
+  foodPos = -1;
+  snekLength = 1;
+  for(int i = 0; i < 46; i++) {
+    talePos[i] = -1;
+  }
+  isDead = 0;
+  timeWhenLoose = 0;
+}
+
+void moveSnek(void) {
+  moveObject();
   updateTale();
 }
 
-int getRandom(int a, int b) {
-  int seed = rand();
-  return (seed%(b - a + 1))+a;
-}
-
 int spawnFood(void) {
-  return getRandom(0,46);
+  int random = getRandom(0,46);
+  return random;
 }
 
 void die(void) {
@@ -231,6 +287,7 @@ void die(void) {
           setAllRGB(255,0,0);
           if(timeWhenLoose+5 < clock) {
             resetSnek();
+            resetGame = 1;
           }
         }
       }
@@ -276,7 +333,50 @@ void snek(void) {
   }
 }
 
-// snek code end
+////////////////////////////////////////
+// Declaration of values Minesweepers //
+////////////////////////////////////////
+
+
+
+
+///////////////////////
+// Minesweepers code //
+///////////////////////
+
+
+
+///////////////////////////////////////
+// Declaration of values random game //
+///////////////////////////////////////
+
+int clickCounter = 0;
+int lastClickCounter = 0;
+
+//////////////////////
+// Random Game Code //
+//////////////////////
+
+void showRandomGame(void) {
+  setBlackRGB();
+  setRGB(currentPos,0,255,0);
+  // char test[10];
+  // sprintf(test,"%d",lastDir);
+  // send_string(test);
+}
+
+void randomGame(void) {
+  //setBlackRGB();
+  if(lastClickCounter != clickCounter){
+    lastClickCounter = clickCounter;
+    moveObject();
+    showRandomGame();
+  }
+}
+
+///////////////////
+// Keyboard Code //
+///////////////////
 
 enum layers {
   _COLEMAK,
@@ -288,14 +388,20 @@ enum layers {
   _ADJUST,
   _LEFT,
   _RIGHT,
-  _SNEK
+  _SNEK,
+  _RANDOM
+};
+
+enum customKeycodes {
+  FOO
 };
 
 enum macros {
     UP,
     LEFT,
     RIGHT,
-    DOWN
+    DOWN,
+    TOCOLE
 };
 
 enum unicode_names {
@@ -440,10 +546,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [_ADJUST] = LAYOUT_planck_mit(
-    _______,   RESET,    DEBUG,   RGB_TOG, RGB_MOD, RGB_HUI, RGB_HUD, RGB_SAI,  RGB_SAD,  RGB_VAI, RGB_VAD, _______,
-    _______,   _______,  _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
-    _______,   _______,  _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
-    TO(_SNEK), X(SNEK),  _______, _______, _______,     _______     , _______,  _______,  _______, _______, _______
+    _______,   RESET,        DEBUG,   RGB_TOG, RGB_MOD, RGB_HUI, RGB_HUD, RGB_SAI,  RGB_SAD,  RGB_VAI, RGB_VAD, _______,
+    _______,   _______,      _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
+    _______,   _______,      _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
+    TO(_SNEK), TO(_RANDOM),  _______, _______, _______,     _______     , _______,  _______,  _______, _______, _______
 ),
 
 /* _LEFT (Lower + Middle)
@@ -480,7 +586,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [_RIGHT] = LAYOUT_planck_mit(
-    _______,   _______,  _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
+    _______,   _______,  _______, _______, _______, _______, _______, KC_0,  M(LEFT),  M(DOWN),  M(UP),   M(RIGHT),
     _______,   _______,  _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
     _______,   _______,  _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
     _______,   _______,  _______, _______, _______,     _______     , _______,  _______,  _______, _______, _______
@@ -502,7 +608,26 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_NO,        KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,   KC_NO,
     KC_NO,        KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,   KC_NO,
     KC_NO,        KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,   KC_NO ,
-    TO(_COLEMAK), KC_NO,    KC_NO,    KC_NO,    KC_NO,        KC_NO      ,    KC_NO,    M(LEFT),  M(DOWN),  M(UP),   M(RIGHT)
+    M(TOCOLE), KC_NO,    KC_NO,    KC_NO,    KC_NO,        KC_NO      ,    KC_NO,    M(LEFT),  M(DOWN),  M(UP),   M(RIGHT)
+),
+
+/* _RANDOM
+ * ,-----------------------------------------------------------------------------------.
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |COLEMA|      |      |      |      |             |      | Left | Down |  Up  |Right |
+ * `-----------------------------------------------------------------------------------'
+ */
+
+[_RANDOM]  = LAYOUT_planck_mit(
+    KC_NO,        KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,   KC_NO,
+    KC_NO,        KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,   KC_NO,
+    KC_NO,        KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,    KC_NO,   KC_NO ,
+    M(TOCOLE), KC_NO,    KC_NO,    KC_NO,    KC_NO,        KC_NO      ,    KC_NO,    M(LEFT),  M(DOWN),  M(UP),   M(RIGHT)
 )
 
 };
@@ -514,19 +639,24 @@ layer_state_t layer_state_set_user(layer_state_t state);
 
 const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
 {
+  currentDir = none;
+
+  if(record->event.pressed) {
+      clickCounter = clickCounter +  1;
+  }
+
   switch(id) {
 
     case UP: {
       if (record->event.pressed) {
-        if(currentDir != down)
           currentDir = up;
+          return false;
       } 
       break;
     }
 
     case DOWN: {
       if (record->event.pressed) {
-        if(currentDir != up)
           currentDir = down;
         return false;
       } 
@@ -535,7 +665,6 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
 
     case LEFT: {
       if (record->event.pressed) {
-        if(currentDir != right)
           currentDir = left;
         return false;
       } 
@@ -544,15 +673,39 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
 
     case RIGHT: {
       if (record->event.pressed) {
-        if(currentDir != left)
           currentDir = right;
         return false;
       } 
       break;
     }
+
+    case TOCOLE: {
+      if(record->event.pressed) {
+          resetGame = 1;
+          layer_move(_COLEMAK);
+        return false;
+      }
+    }
   }
   return MACRO_NONE;
 };
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  if(record->event.pressed){
+    pressedKeys = pressedKeys + 1;
+  }
+  switch(keycode) {
+    case FOO:
+      if(record->event.pressed) {
+        // pressed
+      } else {
+        // released
+      }
+      return false; // skip further processing
+    default:
+      return true;
+  }
+}
 
 void matrix_scan_user(void) {
   uint8_t layer = biton32(layer_state);
@@ -562,9 +715,14 @@ void matrix_scan_user(void) {
     ledsInit = 1;
   }
 
-  if(layer != _SNEK) {
+  if(layer != _SNEK && layer != _RANDOM) {
     resetSnek();
+      if(resetGame==1){
+      setBlackRGB();
+      resetGame = 0;
+    }
   }
+
 
   ledsGlow[46] = 0;
   ledsGlow[40] = 0;
@@ -605,6 +763,9 @@ void matrix_scan_user(void) {
     case _SNEK:
       snek();
       break;
+    case _RANDOM:
+      randomGame();
+      break;
   }
 
   showRGB();
@@ -616,6 +777,12 @@ layer_state_t layer_state_set_user(layer_state_t state) {
   state = update_tri_layer_state(state, _RAISE, _EXTRA, _RIGHT);
   return state;
 }
+
+
+
+//////////////
+// HID CODE //
+//////////////
 
 // Data:
 /*

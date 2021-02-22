@@ -27,3 +27,4 @@ LAYOUTS_HAS_RGB = yes
 # UNICODE_ENABLE = yes
 UNICODEMAP_ENABLE = yes
 RAW_ENABLE = yes # enables hid
+BLUETOOTH_ENABLE = no

@@ -14,11 +14,11 @@ if(deviceInfo) {
 	let device = new HID.HID(deviceInfo.path);
 	
 	device.on("data",  function(data) {
-		console.log(data);
+		console.log("Data:" + data);
+		device.write([0x00,1,250,250,250,10]);
 	});
 	device.on("error", function(err) {
 		console.log(err);
 	});
 	
-	device.write([0x00,1,10,10,10,0]);
 }
