@@ -352,7 +352,10 @@ uint8_t board[36] = {0};
 uint8_t revealed[36] = {0};
 uint8_t flags[36] = {0};
 uint8_t mines = 5;
+uint8_t userMines = 5;
+uint8_t maxMines = 35;
 uint8_t remaining = 5;
+uint8_t showMines = 0;
 uint8_t placed = 0;
 uint8_t deadMine = 0;
 uint8_t revealedNum = 0;
@@ -459,14 +462,16 @@ void flashScreen(int r, int g, int b){
 }
 
 void reveal(int pos) {
-  revealed[pos] = 1;
-  if(board[pos]==9) {
+  if(revealed[pos]==0){
+    revealed[pos] = 1;
+    if(board[pos]==9) {
       deadMine = 1;
       clock = 0;
       revealAll();
     } else {
       ++revealedNum;
     }
+  }
 }
 
 void checkWin(void) {
@@ -508,8 +513,16 @@ void actionTwoRandom(void) {
   }
 }
 
+void showUserMines(void) {
+  setAllRGB(0,0,0);
+  for(int i = 0; i<userMines; i++){
+    setRGB(i,255,0,0);
+  }
+  
+}
+
 void setMines(void) {
-  mines = getRandom(5,34);
+  mines = getRandom(1,userMines);
   remaining = mines;
   placed=0;
   while(placed<mines) {
@@ -612,7 +625,11 @@ void randomGame(void) {
       flashScreen(0,255,0);
     }
     if(clock>4) {
-      showRandomGame();
+      if(showMines){
+        showUserMines();
+      } else {
+        showRandomGame();
+      }
       flashMines();
     }
       
@@ -621,7 +638,11 @@ void randomGame(void) {
       lastPressedKeys = pressedKeys;
       moveObject();
       checkWin();
-      showRandomGame();
+      if(showMines){
+        showUserMines();
+      } else {
+        showRandomGame();
+      }
     }
     flashFlags();
   }
@@ -641,7 +662,9 @@ enum macros {
     SNEKSPEEDP,
     TOUCH,
     ACTION1,
-    ACTION2
+    ACTION2,
+    ADDMINE,
+    SUBMINE
 };
 
 enum unicode_names {
@@ -732,7 +755,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     M(TOUCH),        M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),   M(TOUCH),
     M(TOUCH),        M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),   M(TOUCH),
     M(TOUCH),        M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),    M(TOUCH),   M(TOUCH) ,
-    M(TOCOLE), KC_NO,    KC_NO,    KC_NO,      M(ACTION2),        M(ACTION1)      ,   M(ACTION2),  M(LEFT),     M(DOWN),     M(UP),       M(RIGHT)
+    M(TOCOLE), M(SUBMINE),    M(ADDMINE),    KC_NO,      M(ACTION2),        M(ACTION1)      ,   M(ACTION2),  M(LEFT),     M(DOWN),     M(UP),       M(RIGHT)
 )
 
 };
@@ -811,6 +834,29 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
       if(record->event.pressed){
         actionTwoRandom();
         return false;
+      }
+    }
+
+    case ADDMINE: {
+      if(record->event.pressed){
+        if(userMines < maxMines)
+          ++userMines;
+        showMines = 1;
+        return false;
+      } else if(record->event.pressed == 0) {
+        showMines = 0;
+      }
+    }
+
+    case SUBMINE: {
+      if(record->event.pressed){
+        if(userMines > 1)
+          --userMines;
+        showUserMines();
+        showMines = 1;
+        return false;
+      } else if(record->event.pressed == 0){
+        showMines = 0;
       }
     }
   }
@@ -910,12 +956,32 @@ void keyboard_post_init_user(void) {
 //////////////
 
 void raw_hid_receive(uint8_t *data, uint8_t length) {
+
   if(data[0]==1) {
     for(int i = 0; i<47; i++) {
       setRGB(i, data[1], data[2], data[3]);
     }
-  } else {
+  } else if(data[0]==0) {
     setRGB(data[4], data[1], data[2], data[3]);
+  }
+  
+  
+  else if(data[0]==2) {
+    initRandomGame = 0;
+  }else if(data[0]==3) {
+    currentPos = (data[1]*12)+data[2];
+    pressedKeys = pressedKeys + 1;
+    actionOneRandom();
+  }else if(data[0]==4) {
+    currentPos = (data[1]*12)+data[2];
+    pressedKeys = pressedKeys + 1;
+    actionTwoRandom();
+  }else if(data[0]==5) {
+    if(userMines < maxMines)
+      ++userMines;
+  }else if(data[0]==6) {
+    if(userMines > 1)
+      --userMines;
   }
   raw_hid_send(data,length);
 }

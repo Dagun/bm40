@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+Welcome to edis awesome game running on his keyboard you filthy bastard! UwU
+
+<div class="gameField"></div>
+
+<button id="reveal" type="button">Reveal Field!</button> 
+<button id="flag" type="button">Flag Field!</button> 
+<button id="restart" type="button">Restart!</button> 
+<button id="increase" type="button">Increase Mines</button> 
+<button id="decrease" type="button">Degrees Mines</button> 
+
+</body>
+<script>
+
+    console.log(document.querySelectorAll(".gameField"));
+    let gameField = document.querySelectorAll(".gameField")[0];
+    let table = document.createElement("table");
+    gameField.appendChild(table);
+
+    for(let j = 0; j < 3; j++){
+        let tr = document.createElement("tr");
+        table.appendChild(tr);
+        for(let i = 0; i < 12; i++){
+            let td = document.createElement("td");
+            td.id = i;
+            let button = document.createElement("button");
+            button.innerText = (j*12)+i;
+            button.onclick = function() {
+                setActive(j,i);
+            };
+            button.dataset.gameField = i;
+            td.appendChild(button);
+            tr.appendChild(td);
+        }
+        table.appendChild(tr);
+    }
+
+    setActive = function(row, col) {
+        let gameField = document.querySelectorAll("[data-game-field]");
+        for(let j = 0; j < 3; j++){
+            for(let i = 0; i < 12; i++){
+                gameField[(j*12)+i].innerText = (j*12)+i;
+            }
+        }
+        gameField[(row*12)+col].innerText = "*";
+        cursorPositionCol = col;
+        cursorPositionRow = row;
+    }
+
+    let cursorPositionRow=0;
+    let cursorPositionCol=0;
+
+    revealField = function() {
+        let Http = new XMLHttpRequest();
+        let url='/reveal';
+        let data = JSON.stringify({
+            "row":cursorPositionRow,
+            "col":cursorPositionCol
+        });
+        console.log(data);
+        Http.open("POST", url);
+        Http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        Http.send(data);
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+    
+    resetGame = function() {
+        const Http = new XMLHttpRequest();
+        const url='/reset';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+    
+    flagField = function() {
+        const Http = new XMLHttpRequest();
+        const url='/flag';
+        let data = JSON.stringify({
+            "row":cursorPositionRow,
+            "col":cursorPositionCol
+        });
+        Http.open("POST", url);
+        Http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        Http.send(data);
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+
+    incMine = function() {
+        const Http = new XMLHttpRequest();
+        const url='/inc';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+    
+    decMine = function() {
+        const Http = new XMLHttpRequest();
+        const url='/dec';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+
+    document.getElementById("reveal").onclick = revealField;
+    document.getElementById("restart").onclick = resetGame;
+    document.getElementById("flag").onclick = flagField;
+    document.getElementById("increase").onclick = incMine;
+    document.getElementById("decrease").onclick = decMine;
+    
+</script>
+</html> 
