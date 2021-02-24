@@ -99,23 +99,37 @@ uint32_t getClock(void) {
   return timer_elapsed(key_timer);
 } 
 
-int getRandom(int a, int b) {
-  int seed = rand()*(1+pressedKeys);
-  int random = (seed%(b - a + 1))+a;
-  if(random < 0) {
-    random = random * -1;
-  }
-  return random;
+void send_int(int value) {
+  char val[25];
+  sprintf(val,"%d",value);
+  send_string(val);
 }
 
 void send_return(void) {
   send_string("\n");
 }
 
-void send_int(int value) {
-  char val[25];
-  sprintf(val,"%d",value);
-  send_string(val);
+int getRandom(int a, int b) {
+  static uint8_t count;
+  int random = -1;
+  int counter = 0;
+  
+  while(random < a){
+    int seed = rand()*(1+pressedKeys*count);
+    random = (seed%(b - a + 1))+a;
+    if(random < 0) {
+      random = random * -1;
+    }
+    counter = counter + 1;
+    if(counter > 10){
+      return counter;
+    }
+  }
+  count = count + 1;
+  if(count > 50) {
+    count = 0;
+  }
+  return random;
 }
 
 int getRow(int a) {
@@ -337,8 +351,8 @@ uint16_t lastPressedKeys = 0;
 uint8_t board[36] = {0};
 uint8_t revealed[36] = {0};
 uint8_t flags[36] = {0};
-const uint8_t mines = 5;
-uint8_t remaining = mines;
+uint8_t mines = 5;
+uint8_t remaining = 5;
 uint8_t placed = 0;
 uint8_t deadMine = 0;
 uint8_t revealedNum = 0;
@@ -495,6 +509,9 @@ void actionTwoRandom(void) {
 }
 
 void setMines(void) {
+  mines = getRandom(5,34);
+  remaining = mines;
+  placed=0;
   while(placed<mines) {
     uint8_t pos = getRandom(0,35);
     if(board[pos]!=9) {
@@ -506,52 +523,60 @@ void setMines(void) {
   for(int i=0; i < 36; i++){
     if(board[i]!=9){
       uint8_t count = 0;
-      if(i != 0 && i != 11 && i != 12 && i != 23 && i != 24 && i != 35) {
-        if(i-13 >= 0) {
-          if(board[i-13]==9)
-            ++count;
-        }
-        if(i-12 >= 0) {
+      uint8_t row = getRow(i);
+      uint8_t col = smallestRow(i);
+
+      if(col == 0){
+        if(row>0) {
           if(board[i-12]==9)
             ++count;
-        }
-        if(i-11 >= 0) {
           if(board[i-11]==9)
             ++count;
         }
-        if(i-1 >= 0) {
-          if(board[i-1]==9)
-            ++count;
-        }
-        if(i+1 <= 35) {
-          if(board[i+1]==9)
-            ++count;
-        }
-        if(i+11 <= 35) {
-          if(board[i+11]==9)
-            ++count;
-        }
-        if(i+12 <= 35) {
+        if(row < 2) {
           if(board[i+12]==9)
             ++count;
-        }
-        if(i+13 <= 35) {
           if(board[i+13]==9)
             ++count;
         }
-      } else {
-        if(i == 0 || i == 24) {
-          if(board[i+1]==9)
+        if(board[i+1]==9)
+          ++count;
+      } else if(col==11) {
+        if(row>0) {
+          if(board[i-13]==9)
             ++count;
-        } else if(i == 11 || i == 35) {
-          if(board[i-1]==9)
+          if(board[i-12]==9)
             ++count;
-        } else if(i == 12 || i == 23) {
-          if(board[i-12]==9) 
+        }
+        if(row < 2) {
+          if(board[i+11]==9)
             ++count;
           if(board[i+12]==9)
             ++count;
         }
+        if(board[i-1]==9) 
+          ++count;
+      } else {
+        if(row>0) {
+          if(board[i-13]==9)
+            ++count;
+          if(board[i-12]==9)
+            ++count;
+          if(board[i-11]==9)
+            ++count;
+        }
+        if(row < 3) {
+          if(board[i+11]==9)
+            ++count;
+          if(board[i+12]==9)
+            ++count;
+          if(board[i+13]==9)
+            ++count;
+        }
+        if(board[i-1]==9) 
+          ++count;
+        if(board[i+1]==9)
+          ++count;
       }
       
       board[i]=count;
@@ -561,17 +586,20 @@ void setMines(void) {
 
 void randomGame(void) {
   if(initRandomGame==0){
-    initRandomGame = 1;
     deadMine = 0;
     placedFlags = 0;
     revealedNum = 0;
+    mines=5;
+    remaining = 5;
     placed = 0;
+    lastPressedKeys = -1;
     for(int i = 0; i < 36; i++) {
       board[i] = 0;
       flags[i] = 0;
       revealed[i] = 0;
     }
     setMines();
+    initRandomGame = 1;
   }
 
   
