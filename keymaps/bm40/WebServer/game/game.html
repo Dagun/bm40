@@ -12,6 +12,17 @@ Welcome to edis awesome game running on his keyboard you filthy bastard! UwU
 <button id="increase" type="button">Increase Mines</button> 
 <button id="decrease" type="button">Degrees Mines</button> 
 
+<br><a color="rgba(255,255,255,0)">-----</a>
+<button id="up" type="button">/\</button> 
+<br>
+<button id="left" type="button"><</button> 
+<button id="down" type="button">V</button> 
+<button id="right" type="button">></button> 
+<br>
+<button id="snake" type="button">Snake</button> 
+<button id="minesweepers" type="button">Minesweepers</button> 
+
+
 </body>
 <script>
 
@@ -119,11 +130,88 @@ Welcome to edis awesome game running on his keyboard you filthy bastard! UwU
         }
     };
 
+    leftDir = function() {
+        const Http = new XMLHttpRequest();
+        const url='/left';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText,"left")
+        }
+    };
+
+    downDir = function() {
+        const Http = new XMLHttpRequest();
+        const url='/down';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+
+    upDir = function() {
+        const Http = new XMLHttpRequest();
+        const url='/up';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+
+    rightDir = function() {
+        const Http = new XMLHttpRequest();
+        const url='/right';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+
+    snake = function() {
+        const Http = new XMLHttpRequest();
+        const url='/snake';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+
+    minesweepers = function() {
+        const Http = new XMLHttpRequest();
+        const url='/minesweepers';
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    };
+
+
+
     document.getElementById("reveal").onclick = revealField;
     document.getElementById("restart").onclick = resetGame;
     document.getElementById("flag").onclick = flagField;
     document.getElementById("increase").onclick = incMine;
     document.getElementById("decrease").onclick = decMine;
+    
+    document.getElementById("left").onclick = leftDir;
+    document.getElementById("down").onclick = downDir;
+    document.getElementById("up").onclick = upDir;
+    document.getElementById("right").onclick = rightDir;
+
+    document.getElementById("snake").onclick = snake;
+    document.getElementById("minesweepers").onclick = minesweepers;
+    
     
 </script>
 </html> 

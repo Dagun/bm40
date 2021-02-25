@@ -59,6 +59,36 @@ if(deviceInfo) {
         res.send('');
     });
 
+    app.get('/left',(req, res) =>{
+        device.write([0x00,7]);
+        res.send('');
+    });
+
+    app.get('/down',(req, res) =>{
+        device.write([0x00,8]);
+        res.send('');
+    });
+
+    app.get('/up',(req, res) =>{
+        device.write([0x00,9]);
+        res.send('');
+    });
+
+    app.get('/right',(req, res) =>{
+        device.write([0x00,10]);
+        res.send('');
+    });
+
+    app.get('/snake',(req, res) =>{
+        device.write([0x00,11]);
+        res.send('');
+    });
+
+    app.get('/minesweepers',(req, res) =>{
+        device.write([0x00,12]);
+        res.send('');
+    });
+
     app.use(express.static("game"));
 
     app.listen(port, () => console.log(`Hello world app listening on port ${port}!`));
